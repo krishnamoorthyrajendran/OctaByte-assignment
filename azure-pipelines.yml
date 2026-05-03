@@ -77,3 +77,14 @@ stages:
 
 
 
+- stage: NotifyFailure
+  displayName: Slack Notification
+  condition: succceededOrFailed()
+  jobs:
+    - job: Notify
+      steps:
+        - script: |
+            curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"❌ Pipeline Failed: $(Build.DefinitionName) | Build $(Build.BuildId)\"}" \
+            $(SLACK_WEBHOOK_URL)
+          displayName: "Send Slack Alert"
