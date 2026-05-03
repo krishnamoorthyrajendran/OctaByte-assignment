@@ -17,17 +17,34 @@ variables:
 stages:
 
 - stage: CI
+  displayName: Run Tests & Security Scan
   jobs:
     - job: Test
       steps:
         - checkout: self
 
-        - script: npm install
-        - script: npm test
-        - script: npm run test:integration
+        - script: |
+            echo "Installing dependencies..."
+            npm install
+          workingDirectory: project
+          displayName: Install Dependencies
 
         - script: |
+            echo "Running unit tests..."
+            npm test
+          workingDirectory: project
+          displayName: Unit Tests
+
+        - script: |
+            echo "Running integration tests..."
+            npm run test:integration
+          workingDirectory: project
+          displayName: Integration Tests
+
+        - script: |
+            echo "Dependency security scan..."
             trivy fs --severity HIGH,CRITICAL .
+          workingDirectory: project
           displayName: Dependency Scan
 
 
