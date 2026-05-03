@@ -28,8 +28,9 @@ stages:
           displayName: "Use Node.js"
 
         - script: |
+          workingDirectory: project
             echo "Installing dependencies..."
-            cd project
+            
             npm install
 
             echo "Running unit + integration tests..."
