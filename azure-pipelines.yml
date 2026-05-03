@@ -47,7 +47,7 @@ stages:
 
             echo "Build images"
             docker build -t $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG) -f project/Dockerfile .
-          workingDirectory: project
+          workingDirectory: project/app
 
             echo "Scan images"
             trivy image --exit-code 1 --severity HIGH,CRITICAL $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG)
