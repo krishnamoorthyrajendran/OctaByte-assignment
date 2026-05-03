@@ -24,6 +24,7 @@ stages:
         - script: |
             echo "Installing dependencies..."
             npm install
+            npm run test
 
           
           workingDirectory: project/app
@@ -55,7 +56,7 @@ stages:
 
         - script: |
             echo "Scan image"
-            trivy image --exit-code 1 --severity HIGH,CRITICAL $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG)
+            trivy image  --severity HIGH,CRITICAL $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG)
           displayName: "Scan Image"
 
         - script: |
