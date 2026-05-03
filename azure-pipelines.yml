@@ -79,7 +79,7 @@ stages:
 
 - stage: NotifyFailure
   displayName: Slack Notification
-  condition: success()
+  condition: failed()
   jobs:
     - job: Notify
       steps:
