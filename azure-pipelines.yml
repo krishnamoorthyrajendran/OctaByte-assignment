@@ -27,13 +27,13 @@ stages:
 
             echo "Running unit + integration tests..."
             npm test
-          workingDirectory: project
+          workingDirectory: project/app
           displayName: "Run Tests"
 
         - script: |
             echo "Dependency security scan..."
             trivy fs --severity HIGH,CRITICAL .
-          workingDirectory: project
+          workingDirectory: project/app
           displayName: "Dependency Scan"
 
 
@@ -48,7 +48,7 @@ stages:
 
             echo "Build images"
             docker build -t $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG) -f project/Dockerfile .
-         
+          workingDirectory: project
 
             echo "Scan images"
             trivy image --exit-code 1 --severity HIGH,CRITICAL $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG)
