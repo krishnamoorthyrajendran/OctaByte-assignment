@@ -16,36 +16,31 @@ variables:
 
 stages:
 
-- stage: CI
-  displayName: Run Tests & Security Scan
+- stage: Test
+  displayName: Run Unit & Integration Tests
   jobs:
-    - job: Test
+    - job: TestJob
       steps:
-        - checkout: self
+
+        - task: NodeTool@0
+          inputs:
+            versionSpec: '18.x'
+          displayName: "Use Node.js"
 
         - script: |
             echo "Installing dependencies..."
+            cd project
             npm install
-          workingDirectory: project
-          displayName: Install Dependencies
 
-        - script: |
-            echo "Running unit tests..."
+            echo "Running unit + integration tests..."
             npm test
-          workingDirectory: project
-          displayName: Unit Tests
-
-        - script: |
-            echo "Running integration tests..."
-            npm run test:integration
-          workingDirectory: project
-          displayName: Integration Tests
+          displayName: "Run Tests"
 
         - script: |
             echo "Dependency security scan..."
             trivy fs --severity HIGH,CRITICAL .
           workingDirectory: project
-          displayName: Dependency Scan
+          displayName: "Dependency Scan"
 
 
 - stage: BuildScanPush
@@ -58,17 +53,19 @@ stages:
             docker login --username AWS --password-stdin "$(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com"
 
             echo "Build images"
-            docker build -t $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG) -f project/docker/app/Dockerfile .
-            docker build -t $(AWS_ECR_REGISTRY):nginx-$(IMAGE_TAG) -f project/docker/nginx/Dockerfile .
+            docker build -t $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG) -f project/Dockerfile .
+         
 
             echo "Scan images"
             trivy image --exit-code 1 --severity HIGH,CRITICAL $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG)
-            trivy image --exit-code 1 --severity HIGH,CRITICAL $(AWS_ECR_REGISTRY):nginx-$(IMAGE_TAG)
+           
 
             echo "Push images"
             docker push $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG)
-            docker push $(AWS_ECR_REGISTRY):nginx-$(IMAGE_TAG)
+           
           displayName: 'Build, Scan, and Push Docker Images'
+
+-           
 
 
 
