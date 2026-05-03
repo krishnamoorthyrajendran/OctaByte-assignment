@@ -21,20 +21,13 @@ stages:
   jobs:
     - job: TestJob
       steps:
-
-        - task: NodeTool@0
-          inputs:
-            versionSpec: '18.x'
-          displayName: "Use Node.js"
-
         - script: |
-          workingDirectory: project
             echo "Installing dependencies..."
-            
             npm install
 
             echo "Running unit + integration tests..."
             npm test
+          workingDirectory: project
           displayName: "Run Tests"
 
         - script: |
