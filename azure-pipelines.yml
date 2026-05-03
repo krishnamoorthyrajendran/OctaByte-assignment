@@ -1,0 +1,51 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  - group: aws_ecr
+  - name: IMAGE_TAG
+    value: $(Build.BuildId)
+
+stages:
+  - stage: BuilDockerImages
+    displayName: Build Docker Images
+    jobs:
+      - job: BuildImages
+        displayName: Build Images Job
+        steps:
+          - script: |
+              echo "Logging into AWS ECR..."
+              aws ecr get-login-password --region "$(AWS_REGION)" | \
+              docker login --username AWS --password-stdin "$(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com"
+
+              echo "Building app image"
+              docker build -t $(IMAGE_NAME):$(IMAGE_TAG) -f project/docker/app/Dockerfile .
+
+              echo "Building nginx image"
+              docker build -t $(IMAGE_NAME):$(IMAGE_TAG) -f project/docker/nginx/Dockerfile .
+
+              echo "Pushing images to ECR..."
+              docker push $(IMAGE_NAME):$(IMAGE_TAG)
+            displayName: 'Build the docker images'
+
+  - stage: ScanDockerImages
+    displayName: ScanDockerImages
+    jobs:
+      - job: BuildImages
+        displayName: ScanDockerImages Job
+        steps:
+          - script: |
+              echo "Scanning app image"
+              trivy image --exit-code 1 --severity HIGH,CRITICAL $(AWS_ECR_REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
+
+              echo "Scanning NGINX image..."
+              trivy image --exit-code 1 --severity HIGH,CRITICAL $(AWS_ECR_REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
+            displayName: 'Scan the docker images'            
