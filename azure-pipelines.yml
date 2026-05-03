@@ -32,15 +32,7 @@ stages:
               echo "Building nginx image"
               docker build -t $(AWS_ECR_REGISTRY):nginx-$(IMAGE_TAG) -f project/docker/nginx/Dockerfile .
 
-            displayName: 'Build the docker images'
-
-  - stage: ScanDockerImages
-    displayName: ScanDockerImages
-    jobs:
-      - job: BuildImages
-        displayName: ScanDockerImages Job
-        steps:
-          - script: |
+           
               echo "Scanning app image"
               trivy image --exit-code 1 --severity HIGH,CRITICAL $(AWS_ECR_REGISTRY)/app-$(IMAGE_TAG)
 
