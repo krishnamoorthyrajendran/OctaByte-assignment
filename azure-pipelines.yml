@@ -37,26 +37,31 @@ stages:
 
 
 - stage: BuildScanPush
+  displayName: Build, Scan and Push Docker Image
   jobs:
     - job: BuildScanPushJob
       steps:
+
         - script: |
             echo "Login to ECR"
             aws ecr get-login-password --region "$(AWS_REGION)" | \
             docker login --username AWS --password-stdin "$(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com"
+          displayName: "ECR Login"
 
-            echo "Build images"
-            docker build -t $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG) -f project/Dockerfile .
-          workingDirectory: project/app
+        - script: |
+            echo "Build image"
+            docker build -t $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG) -f project/Dockerfile project
+          displayName: "Docker Build"
 
-            echo "Scan images"
+        - script: |
+            echo "Scan image"
             trivy image --exit-code 1 --severity HIGH,CRITICAL $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG)
-           
+          displayName: "Scan Image"
 
-            echo "Push images"
+        - script: |
+            echo "Push image"
             docker push $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG)
-           
-          displayName: 'Build, Scan, and Push Docker Images'
+          displayName: "Push Image"
          
 
 
