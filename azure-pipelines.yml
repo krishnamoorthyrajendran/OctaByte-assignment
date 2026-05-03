@@ -27,13 +27,11 @@ stages:
               docker login --username AWS --password-stdin "$(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com"
 
               echo "Building app image"
-              docker build -t $(IMAGE_NAME):$(IMAGE_TAG) -f project/docker/app/Dockerfile .
+              docker build -t $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG) -f project/docker/app/Dockerfile .
 
               echo "Building nginx image"
-              docker build -t $(IMAGE_NAME):$(IMAGE_TAG) -f project/docker/nginx/Dockerfile .
+              docker build -t $(AWS_ECR_REGISTRY):nginx-$(IMAGE_TAG) -f project/docker/nginx/Dockerfile .
 
-              echo "Pushing images to ECR..."
-              docker push $(IMAGE_NAME):$(IMAGE_TAG)
             displayName: 'Build the docker images'
 
   - stage: ScanDockerImages
@@ -44,8 +42,10 @@ stages:
         steps:
           - script: |
               echo "Scanning app image"
-              trivy image --exit-code 1 --severity HIGH,CRITICAL $(AWS_ECR_REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
+              trivy image --exit-code 1 --severity HIGH,CRITICAL $(AWS_ECR_REGISTRY)/app-$(IMAGE_TAG)
 
               echo "Scanning NGINX image..."
-              trivy image --exit-code 1 --severity HIGH,CRITICAL $(AWS_ECR_REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
+              trivy image --exit-code 1 --severity HIGH,CRITICAL $(AWS_ECR_REGISTRY)/nginx-$(IMAGE_TAG)
             displayName: 'Scan the docker images'            
+
+
