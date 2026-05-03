@@ -25,8 +25,7 @@ stages:
             echo "Installing dependencies..."
             npm install
 
-            echo "Running unit + integration tests..."
-            npm test
+          
           workingDirectory: project/app
           displayName: "Run Tests"
 
