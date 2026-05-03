@@ -15,6 +15,23 @@ variables:
     value: $(Build.BuildId)
 
 stages:
+
+- stage: CI
+  condition: eq(variables['Build.Reason'], 'PullRequest')
+  jobs:
+    - job: Test
+      steps:
+        - checkout: self
+
+        - script: npm install
+        - script: npm test
+        - script: npm run test:integration
+
+        - script: |
+            trivy fs --severity HIGH,CRITICAL .
+          displayName: Dependency Scan
+          
+
 - stage: BuildScanPush
   jobs:
     - job: BuildScanPushJob
@@ -36,6 +53,6 @@ stages:
             docker push $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG)
             docker push $(AWS_ECR_REGISTRY):nginx-$(IMAGE_TAG)
           displayName: 'Build, Scan, and Push Docker Images'
-                        
+
 
 
