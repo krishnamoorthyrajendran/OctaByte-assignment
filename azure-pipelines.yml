@@ -11,6 +11,7 @@ pool:
 
 variables:
   - group: aws_ecr
+  - group: SLACK_WEBHOOK
   - name: IMAGE_TAG
     value: $(Build.BuildId)
 
