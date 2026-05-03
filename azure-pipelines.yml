@@ -21,12 +21,22 @@ stages:
   jobs:
     - job: TestJob
       steps:
+
         - script: |
             echo "Installing dependencies..."
             npm install
-            npm run test
+          workingDirectory: project/app
+          displayName: "Install Dependencies"
 
-          
+        - script: |
+            echo "Installing test framework..."
+            npm install --save-dev jest supertest
+          workingDirectory: project/app
+          displayName: "Install Test Tools"
+
+        - script: |
+            echo "Running tests..."
+            npm test
           workingDirectory: project/app
           displayName: "Run Tests"
 
