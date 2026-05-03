@@ -17,7 +17,6 @@ variables:
 stages:
 
 - stage: CI
-  condition: eq(variables['Build.Reason'], 'PullRequest')
   jobs:
     - job: Test
       steps:
@@ -30,7 +29,7 @@ stages:
         - script: |
             trivy fs --severity HIGH,CRITICAL .
           displayName: Dependency Scan
-          
+
 
 - stage: BuildScanPush
   jobs:
