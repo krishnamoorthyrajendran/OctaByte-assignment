@@ -7,10 +7,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static("public"));
 
-// PostgreSQL connection (Docker service name = db)
+// PostgreSQL connection (Docker service OR CI override)
 const pool = new Pool({
   user: "postgres",
-  host: "db",
+  host: process.env.DB_HOST || "db",
   database: "appdb",
   password: "postgres",
   port: 5432,
@@ -22,21 +22,34 @@ pool.query(`
     id SERIAL PRIMARY KEY,
     text VARCHAR(255)
   )
-`);
+`).catch(err => console.error("Table init error:", err));
+
+// ROOT route (IMPORTANT for tests)
+app.get("/", (req, res) => {
+  res.status(200).send("Home");
+});
 
 // Save data
 app.get("/submit", async (req, res) => {
-  const text = req.query.text;
+  try {
+    const text = req.query.text;
 
-  await pool.query("INSERT INTO messages (text) VALUES ($1)", [text]);
+    await pool.query("INSERT INTO messages (text) VALUES ($1)", [text]);
 
-  res.send(`Saved to DB: ${text}`);
+    res.send(`Saved to DB: ${text}`);
+  } catch (err) {
+    res.status(500).send("DB Error");
+  }
 });
 
 // Get all data
 app.get("/messages", async (req, res) => {
-  const result = await pool.query("SELECT * FROM messages ORDER BY id DESC");
-  res.json(result.rows);
+  try {
+    const result = await pool.query("SELECT * FROM messages ORDER BY id DESC");
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).send("DB Error");
+  }
 });
 
 // Health check
@@ -44,6 +57,12 @@ app.get("/health", (req, res) => {
   res.send("OK");
 });
 
-app.listen(3000, () => {
-  console.log("Server running on port 3000");
-});
+// Export app for testing
+module.exports = app;
+
+// Start server only when NOT testing
+if (require.main === module) {
+  app.listen(3000, () => {
+    console.log("Server running on port 3000");
+  });
+}
