@@ -76,7 +76,28 @@ stages:
           displayName: "Push Image"
          
 
+- stage: terraform
+  displayName: Deploy Infrastructure with Terraform
+  jobs:
+    - job: TerraformJob
+      steps:
+        - script: |
+            echo "Terraform Init"
+            terraform init
+          workingDirectory: infrastructure  
+          displayName: "Terraform Init"
+        - script: |
+            echo "Terraform plan"
+            terraform plan 
+          workingDirectory: infrastructure  
+          displayName: "Terraform Plan"
+        - script: | 
+            echo "Terraform apply"     
+            terraform apply -auto-approve 
+          workingDirectory: infrastructure
+          displayName: "Terraform Apply"
 
+     
 
 - stage: NotifyFailure
   displayName: Slack Notification
@@ -86,6 +107,6 @@ stages:
       steps:
         - script: |
             curl -X POST -H 'Content-type: application/json' \
-            --data "{\"text\":\"❌ Pipeline Failed: $(Build.DefinitionName) | Build $(Build.BuildId)\"}" \
+            --data "{\"text\":\"✅ Pipeline Succeeded: $(Build.DefinitionName) | Build $(Build.BuildId)\"}" \
             $(SLACK_WEBHOOK_URL)
           displayName: "Send Slack Alert"
