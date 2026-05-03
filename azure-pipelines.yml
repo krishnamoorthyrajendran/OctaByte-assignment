@@ -15,44 +15,27 @@ variables:
     value: $(Build.BuildId)
 
 stages:
-  - stage: BuilDockerImages
-    displayName: Build Docker Images
-    jobs:
-      - job: BuildImages
-        displayName: Build Images Job
-        steps:
-          - script: |
-              echo "Building app image"
-              docker build -t $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG) -f project/docker/app/Dockerfile .
+- stage: BuildScanPush
+  jobs:
+    - job: BuildScanPushJob
+      steps:
+        - script: |
+            echo "Login to ECR"
+            aws ecr get-login-password --region "$(AWS_REGION)" | \
+            docker login --username AWS --password-stdin "$(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com"
 
-              echo "Building nginx image"
-              docker build -t $(AWS_ECR_REGISTRY):nginx-$(IMAGE_TAG) -f project/docker/nginx/Dockerfile .
+            echo "Build images"
+            docker build -t $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG) -f project/docker/app/Dockerfile .
+            docker build -t $(AWS_ECR_REGISTRY):nginx-$(IMAGE_TAG) -f project/docker/nginx/Dockerfile .
 
-              trivy image --exit-code 1 --severity HIGH,CRITICAL $(AWS_ECR_REGISTRY):$(IMAGE_TAG)
-              trivy image --exit-code 1 --severity HIGH,CRITICAL $(AWS_ECR_REGISTRY):nginx-$(IMAGE_TAG)
+            echo "Scan images"
+            trivy image --exit-code 1 --severity HIGH,CRITICAL $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG)
+            trivy image --exit-code 1 --severity HIGH,CRITICAL $(AWS_ECR_REGISTRY):nginx-$(IMAGE_TAG)
 
-            displayName: 'Build the docker images'
-
-  
-
-  - stage: PushDockerImages
-      displayName: Push Docker Images
-      dependsOn: ScanDockerImages
-      condition: succeeded()
-      jobs:
-        - job: PushImages
-          displayName: Push Images Job
-          steps:
-            - script: |
-                echo "Logging into AWS ECR..."
-                aws ecr get-login-password --region "$(AWS_REGION)" | \
-                docker login --username AWS --password-stdin "$(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com"
-
-                echo "Pushing app image to ECR..."
-                docker push $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG)
-
-                echo "Pushing nginx image to ECR..."
-                docker push $(AWS_ECR_REGISTRY):nginx-$(IMAGE_TAG)
-              displayName: 'Push the docker images'                
+            echo "Push images"
+            docker push $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG)
+            docker push $(AWS_ECR_REGISTRY):nginx-$(IMAGE_TAG)
+          displayName: 'Build, Scan, and Push Docker Images'
+                        
 
 
