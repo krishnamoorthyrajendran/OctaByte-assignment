@@ -64,8 +64,7 @@ stages:
             docker push $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG)
            
           displayName: 'Build, Scan, and Push Docker Images'
-
--           
+         
 
 
 
