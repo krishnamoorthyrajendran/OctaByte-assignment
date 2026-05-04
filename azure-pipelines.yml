@@ -145,3 +145,4 @@ stages:
             --data "{\"text\":\"✅ Pipeline Succeeded: $(Build.DefinitionName) | Build $(Build.BuildId)\"}" \
             $(SLACK_WEBHOOK_URL)
           displayName: "Send Slack Alert"
+          
