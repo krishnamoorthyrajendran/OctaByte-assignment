@@ -17,8 +17,9 @@ module "rds" {
 
   project_name = "myapp"
 
-  db_name     = "mydb"
+  db_name     = "appdb"
   db_username = "postgres"
+  db_password = "postgres"
 
   vpc_id             = module.vpc.vpc_id
   private_subnet_ids = module.vpc.private_subnet_ids

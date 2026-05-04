@@ -1,39 +1,4 @@
-# -------------------
-# Random Password (secure)
-# -------------------
-resource "random_password" "db" {
-  length  = 16
-  special = true
-}
 
-# -------------------
-# Secrets Manager
-# -------------------
-resource "aws_secretsmanager_secret" "db_secret" {
-  name = "${var.project_name}-db-secret"
-}
-
-resource "aws_secretsmanager_secret_version" "db_secret_version" {
-  secret_id = aws_secretsmanager_secret.db_secret.id
-
-  secret_string = jsonencode({
-    username = var.db_username
-    password = random_password.db.result
-  })
-}
-
-# -------------------
-# Read Secret
-# -------------------
-locals {
-  db_creds = jsondecode(
-    aws_secretsmanager_secret_version.db_secret_version.secret_string
-  )
-}
-
-# -------------------
-# Security Group
-# -------------------
 resource "aws_security_group" "rds_sg" {
   name   = "${var.project_name}-rds-sg"
   vpc_id = var.vpc_id
@@ -54,9 +19,7 @@ resource "aws_security_group" "rds_sg" {
   }
 }
 
-# -------------------
-# Subnet Group
-# -------------------
+
 resource "aws_db_subnet_group" "this" {
   name       = "${var.project_name}-db-subnet-group"
   subnet_ids = var.private_subnet_ids
@@ -79,8 +42,8 @@ resource "aws_db_instance" "this" {
   allocated_storage = var.db_allocated_storage
 
   db_name  = var.db_name
-  username = local.db_creds.username
-  password = local.db_creds.password
+  username = var.db_username
+  password = var.db_password
 
   vpc_security_group_ids = [aws_security_group.rds_sg.id]
   db_subnet_group_name   = aws_db_subnet_group.this.name
