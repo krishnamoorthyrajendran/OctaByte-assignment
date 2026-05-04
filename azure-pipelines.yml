@@ -98,11 +98,7 @@ stages:
             terraform apply -auto-approve 
           workingDirectory: infrastructure
           displayName: "Terraform Apply"
-        - script: | 
-            echo "Terraform apply"     
-            terraform destroy --auto-approve
-          workingDirectory: infrastructure
-          displayName: "Terraform destroy"
+
      
 - stage: CodePush
   displayName: Update ArgoCD Repo
@@ -140,7 +136,7 @@ stages:
 
 - stage: NotifyFailure
   displayName: Slack Notification
-  condition: succeeded()
+  condition: failed()
   jobs:
     - job: Notify
       steps:
