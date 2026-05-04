@@ -119,12 +119,12 @@ stages:
                   echo "Using IMAGE_TAG = $(IMAGE_TAG)"
 
                   echo "Cloning ArgoCD Repo..."
-                  git clone https://$(GITHUB_TOKEN)@github.com/krishnamoorthyrajendran/OctaByte-assignment-CD.git cd-repo
+                  git clone https://$(GITHUB_TOKEN)@github.com/krishnamoorthyrajendran/OctaByte-assignment-CD.git OctaByte-assignment-CD
 
                   echo "Updating Deployment YAML..."
-                  sed -i "s|image: .*|image: $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG)|" cd-repo/k8s/deployment.yaml
+                  sed -i "s|image: .*|image: $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG)|" OctaByte-assignment-CD/k8s/deployment.yaml
 
-                  cd cd-repo
+                  cd OctaByte-assignment-CD
 
                   git config user.email "krishnamoorthy980@gmail.com"
                   git config user.name "krishnamoorthy"
@@ -145,4 +145,3 @@ stages:
             --data "{\"text\":\"✅ Pipeline Succeeded: $(Build.DefinitionName) | Build $(Build.BuildId)\"}" \
             $(SLACK_WEBHOOK_URL)
           displayName: "Send Slack Alert"
-          
