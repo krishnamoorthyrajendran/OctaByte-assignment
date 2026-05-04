@@ -118,11 +118,11 @@ stages:
               - script: |
                   echo "Using IMAGE_TAG = $(IMAGE_TAG)"
 
-                  echo "Cloning ArgoCD Repo..."
-                  git clone https://$(GITHUB_TOKEN)@github.com/krishnamoorthyrajendran/OctaByte-assignment-CD.git OctaByte-assignment-CD
+                  echo "Cloning ArgoCD Repo (prod branch)..."
+                  git clone -b prod https://$(GITHUB_TOKEN)@github.com/krishnamoorthyrajendran/OctaByte-assignment-CD.git
 
                   echo "Updating Deployment YAML..."
-                  sed -i "s|image: .*|image: $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG)|" OctaByte-assignment-CD/k8s/deployment.yaml
+                  sed -i "s|image: .*|image: $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG)|" OctaByte-assignment-CD/k8s/prod/deployment.yaml
 
                   cd OctaByte-assignment-CD
 
@@ -130,8 +130,8 @@ stages:
                   git config user.name "krishnamoorthy"
 
                   git add .
-                  git commit -m "Update image to $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG)"
-                  git push
+                  git commit -m "Update image to $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG)" || echo "No changes to commit"
+                  git push origin prod
                 displayName: "Update GitOps Repo"
 
 - stage: NotifyFailure
