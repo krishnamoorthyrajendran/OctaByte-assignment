@@ -122,7 +122,7 @@ stages:
                   git clone -b prod https://$(GITHUB_TOKEN)@github.com/krishnamoorthyrajendran/OctaByte-assignment-CD.git
 
                   echo "Updating Deployment YAML..."
-                  sed -i "s|image: .*|image: $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG)|" OctaByte-assignment-CD/k8s/prod/deployment.yaml
+                  sed -i "s|image: .*|image: $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG)|" OctaByte-assignment-CD/k8s/deployment.yaml
 
                   cd OctaByte-assignment-CD
 
