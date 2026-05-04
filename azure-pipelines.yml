@@ -12,6 +12,7 @@ pool:
 variables:
   - group: aws_ecr
   - group: aws_eks
+  - group: github_token
   - group: SLACK_WEBHOOK
   - name: IMAGE_TAG
     value: $(Build.BuildId)
@@ -99,31 +100,39 @@ stages:
           displayName: "Terraform Apply"
 
      
-- stage: DeployToEKS
-  displayName: Deploy to Kubernetes (EKS)
+- stage: CodePush
+  displayName: Update ArgoCD Repo
   dependsOn: BuildScanPush
+
   jobs:
-    - job: DeployJob
-      steps:
+    - deployment: PushToArgoCD   
+      displayName: Push to GitOps Repo
+      environment: argocd-approval   
 
-        - script: |
-            echo "Setting up kubectl"
-            aws eks update-kubeconfig --region "$(AWS_REGION)" --name "$(EKS_CLUSTER_NAME)"
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+              - checkout: self
 
-          displayName: "Setup kubectl"
+              - script: |
+                  echo "Using IMAGE_TAG = $(IMAGE_TAG)"
 
-        - script: |
-            echo "Deploy base YAML (first time only)"
-            kubectl apply -f k8s/
-          displayName: "Apply manifests"  
+                  echo "Cloning ArgoCD Repo..."
+                  git clone https://$(GITHUB_TOKEN)@github.com/krishnamoorthyrajendran/OctaByte-assignment-CD.git cd-repo
 
+                  echo "Updating Deployment YAML..."
+                  sed -i "s|image: .*|image: $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG)|" cd-repo/k8s/deployment.yaml
 
-        - script: |
-            echo "Update image automatically in deployment"
-            kubectl set image deployment/app-deployment \
-              myapp=$(AWS_ECR_REGISTRY):app-$(IMAGE_TAG) \
-              -n prod
-          displayName: "Update Image"  
+                  cd cd-repo
+
+                  git config user.email "krishnamoorthy980@gmail.com"
+                  git config user.name "krishnamoorthy"
+
+                  git add .
+                  git commit -m "Update image to $(AWS_ECR_REGISTRY):app-$(IMAGE_TAG)"
+                  git push
+                displayName: "Update GitOps Repo"
 
 - stage: NotifyFailure
   displayName: Slack Notification
