@@ -11,6 +11,7 @@ pool:
 
 variables:
   - group: aws_ecr
+  - group: aws_eks
   - group: SLACK_WEBHOOK
   - name: IMAGE_TAG
     value: $(Build.BuildId)
@@ -98,6 +99,31 @@ stages:
           displayName: "Terraform Apply"
 
      
+- stage: DeployToEKS
+  displayName: Deploy to Kubernetes (EKS)
+  dependsOn: BuildScanPush
+  jobs:
+    - job: DeployJob
+      steps:
+
+        - script: |
+            echo "Setting up kubectl"
+            aws eks update-kubeconfig --region "$(AWS_REGION)" --name "$(EKS_CLUSTER_NAME)"
+
+          displayName: "Setup kubectl"
+
+        - script: |
+            echo "Deploy base YAML (first time only)"
+            kubectl apply -f k8s/
+          displayName: "Apply manifests"  
+
+
+        - script: |
+            echo "Update image automatically in deployment"
+            kubectl set image deployment/app-deployment \
+              myapp=$(AWS_ECR_REGISTRY):app-$(IMAGE_TAG) \
+              -n prod
+          displayName: "Update Image"  
 
 - stage: NotifyFailure
   displayName: Slack Notification
